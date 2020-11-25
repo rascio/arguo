@@ -1,0 +1,5 @@
+{:test true}
+{:test false}
+1
+"pippo"
+:test/something

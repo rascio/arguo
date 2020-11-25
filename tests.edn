@@ -1,0 +1,6 @@
+#kaocha/v1
+{:tests [{:id :unit
+          :test-paths ["test/arguo"]
+          :source-paths ["src/arguo"]}]
+  :reporter [kaocha.report/documentation]
+  :kaocha.plugin.capture-output/capture-output? true}
