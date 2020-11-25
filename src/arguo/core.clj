@@ -38,11 +38,15 @@
     `(do (log/debug "🚀" ~(str id) "|" ~description)
          (assert-spec ~spec ~v))
     v))
+(defn- interpolate [x]
+  (if (string? x)
+    `(<< ~x)
+    x))
 
 (defmacro step
   "Define an Arguo step.  
-   id is a symbol that will be binded to the ':observe' key of the step options
-   The second parameter are the options (a map) for the test:
+   id is a symbol that will be binded to the result of ':observe' key of the step options
+   The second parameter is the map of options for the test:
    - :description => the description of the test
    - :observe => the expression to test
    - :export => a list of variables to export (in the form of a let binding)
@@ -51,7 +55,8 @@
    - :having => a list of variables to use in the test (before evaluate :observe)
    Any other expression after the step options will be executed after the test,
    and can use the test id to access to its result (or any of the :export or :having symbols)
-   Inside the :assert and :export the symbol *this* can be used to refer to the :observe result."
+   Inside the :assert and :export the symbol *this* can be used to refer to the :observe result.
+   The description can be an interpolation string (eg. \"x value is ~{x}\")"
   [id
    {:keys [description observe export assert spec having]
     :or   {description (str id)
@@ -61,7 +66,7 @@
   `(let [~@having
          ~id ~(eval-test-object id description observe spec)
          ~@(walk/postwalk-replace {'*this* id} export)]
-     (testing (<< ~description)
+     (testing ~(interpolate description)
        ~(walk/postwalk-replace {'*this* id} assert))
      ~@then))
 
@@ -78,13 +83,13 @@
    (testing \"description\"
        (arguo step some {} 
               (do (println \"something\"))))
-   "
+   The description can be an interpolation string (eg. \"x value is ~{x}\")"
   [desc & steps]
   (letfn [(write [[step & tail]]
                  (if (nil? tail)
                    step
                    (concat step [(write tail)])))]
-    `(testing (<< ~desc)
+    `(testing ~(interpolate desc)
          ~(write steps))))
 
 (defmacro def-use-case

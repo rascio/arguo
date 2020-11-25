@@ -3,21 +3,23 @@
             [arguo.core :as arguo]
             [clojure.spec.alpha :as s]))
 
+;Define a test case, automatically wraps everything in a flow
 (arguo/def-use-case basic-features "Testing Arguo basic features"
   (arguo/step simple-assertion
               {:description "Testing *this*, export and assertions"
                :observe "Hello World"
+               ;export two variable (a-value, another-value)
                :export [a-value *this*
                         another-value "Hello World"]
                :assert (is (= "Hello World"
-                              *this*
+                              *this* ;*this* is an alias for simple-assertion (in this step)
                               simple-assertion
                               a-value
                               another-value))})
   (arguo/step spec-assertion
               {:description "Testing specs are 'conformed'"
                :observe [1 "aaa"]
-               :spec (s/spec (s/cat :first int? :second string?))
+               :spec (s/spec (s/cat :first int? :second string?)) ;Clojure specs are conformed ('s/cat' transforms a list into a map)
                :export [f (*this* :first)
                         s (*this* :second)]
                :assert (do (is (= f 1))
@@ -30,7 +32,7 @@
                :assert (is (= "Hello World" *this*))})
   
   (do (println "We can also write blocks of code")
-      (println "step-1 ==" step-1))
+      (println "step-1 ==" step-1)) ;step-1 maintain the result of the previous step
 
   (arguo/step step-2
               {:description "Step 2"
@@ -48,6 +50,7 @@
 
 (deftest test-repetition 
   ;~{n} is string interpolation, it will be replaced by the value of 'n'
+  ; interpolation is automatically resolved only for descriptions
   (arguo/repeat "Tests using repetition in tests: ~{n}"
                 [n (range 0 10)]
                 (arguo/step verify-formula
